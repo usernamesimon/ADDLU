@@ -14,9 +14,9 @@
 
 -- VENDOR "Altera"
 -- PROGRAM "Quartus Prime"
--- VERSION "Version 18.1.0 Build 625 09/12/2018 SJ Lite Edition"
+-- VERSION "Version 18.1.0 Build 625 09/12/2018 SJ Standard Edition"
 
--- DATE "12/15/2022 10:23:38"
+-- DATE "12/15/2022 10:55:01"
 
 -- 
 -- Device: Altera EP4CE115F29C7 Package FBGA780
@@ -80,8 +80,8 @@ ENTITY 	top IS
     PORT (
 	clk : IN std_logic;
 	data : IN std_logic;
-	q_out : BUFFER std_logic;
-	clk_out : BUFFER std_logic
+	q_out : OUT std_logic;
+	clk_out : OUT std_logic
 	);
 END top;
 

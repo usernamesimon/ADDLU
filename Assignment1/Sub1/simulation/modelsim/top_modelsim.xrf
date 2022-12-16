@@ -1,10 +1,10 @@
 vendor_name = ModelSim
-source_file = 1, C:/Users/schli/OneDrive/TU/2022WS/LU_Advanced_Digital_Design/Assignments/Assignment1/Sub1/top.vhd
-source_file = 1, c:/intelfpga_lite/18.1/quartus/libraries/vhdl/ieee/prmtvs_b.vhd
-source_file = 1, c:/intelfpga_lite/18.1/quartus/libraries/vhdl/ieee/prmtvs_p.vhd
-source_file = 1, c:/intelfpga_lite/18.1/quartus/libraries/vhdl/ieee/timing_b.vhd
-source_file = 1, c:/intelfpga_lite/18.1/quartus/libraries/vhdl/ieee/timing_p.vhd
-source_file = 1, C:/Users/schli/OneDrive/TU/2022WS/LU_Advanced_Digital_Design/Assignments/Assignment1/Sub1/db/top.cbx.xml
+source_file = 1, /homes/s11776870/Documents/ADDLU/Assignment1/Sub1/top.vhd
+source_file = 1, /opt/quartus_18.1/quartus/libraries/vhdl/ieee/prmtvs_b.vhd
+source_file = 1, /opt/quartus_18.1/quartus/libraries/vhdl/ieee/prmtvs_p.vhd
+source_file = 1, /opt/quartus_18.1/quartus/libraries/vhdl/ieee/timing_b.vhd
+source_file = 1, /opt/quartus_18.1/quartus/libraries/vhdl/ieee/timing_p.vhd
+source_file = 1, /homes/s11776870/Documents/ADDLU/Assignment1/Sub1/db/top.cbx.xml
 design_name = hard_block
 design_name = top
 instance = comp, \q_out~output\, q_out~output, top, 1
