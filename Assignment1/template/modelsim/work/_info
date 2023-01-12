@@ -1,0 +1,169 @@
+m255
+K4
+z2
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+dC:/intelFPGA/18.1
+Edst
+Z0 w1673528837
+Z1 DPx3 std 6 textio 0 22 zE1`LPoLg^DX3Oz^4Fj1K3
+Z2 DPx4 ieee 14 std_logic_1164 0 22 eNV`TJ_GofJTzYa?f<@Oe1
+Z3 dA:/OneDrive/TU/2022WS/LU_Advanced_Digital_Design/Assignments/Assignment1/template/models
+Z4 8A:/OneDrive/TU/2022WS/LU_Advanced_Digital_Design/Assignments/Assignment1/template/src/nosync.vhd
+Z5 FA:/OneDrive/TU/2022WS/LU_Advanced_Digital_Design/Assignments/Assignment1/template/src/nosync.vhd
+l0
+L34
+V`iHj:mdYQZ0EPdXcoAOIE0
+!s100 LG>[Ted`99SikfMMaVKnO3
+Z6 OV;C;10.5b;63
+32
+Z7 !s110 1673528854
+!i10b 1
+Z8 !s108 1673528854.000000
+Z9 !s90 -reportprogress|300|-work|work|-2002|-explicit|-stats=none|A:/OneDrive/TU/2022WS/LU_Advanced_Digital_Design/Assignments/Assignment1/template/src/nosync.vhd|
+Z10 !s107 A:/OneDrive/TU/2022WS/LU_Advanced_Digital_Design/Assignments/Assignment1/template/src/nosync.vhd|
+!i113 1
+Z11 o-work work -2002 -explicit
+Z12 tExplicit 1 CvgOpt 0
+Adst_arch
+R1
+R2
+Z13 DEx4 work 3 dst 0 22 `iHj:mdYQZ0EPdXcoAOIE0
+l92
+L87
+VEajHgHKmh@VaKf_2XJfk83
+!s100 CZzTl@V0Y[zXM06XcA9d`0
+R6
+32
+R7
+!i10b 1
+R8
+R9
+R10
+!i113 1
+R11
+R12
+Esrc
+R0
+R1
+R2
+R3
+R4
+R5
+l0
+L21
+VeE]UL_;NCPnEcO]?giP`03
+!s100 a300H;3_9UXzFUF5MjObH0
+R6
+32
+R7
+!i10b 1
+R8
+R9
+R10
+!i113 1
+R11
+R12
+Asrc_arch
+Z14 DEx4 work 3 src 0 22 eE]UL_;NCPnEcO]?giP`03
+Z15 DPx4 ieee 11 numeric_std 0 22 :ASDNFgHXf_ih3J@9F3Ze1
+R1
+R2
+l57
+L49
+VYNL7:LD@fO3cXCzcg92XD0
+!s100 kB`>@Do]hSkIPFJjGnH:20
+R6
+32
+R7
+!i10b 1
+R8
+R9
+R10
+!i113 1
+R11
+R12
+Etb_top
+Z16 w1673526271
+R1
+R2
+R3
+Z17 8A:/OneDrive/TU/2022WS/LU_Advanced_Digital_Design/Assignments/Assignment1/template/src/nosync_tb.vhd
+Z18 FA:/OneDrive/TU/2022WS/LU_Advanced_Digital_Design/Assignments/Assignment1/template/src/nosync_tb.vhd
+l0
+L4
+V`n?RfLHlKB@7iUABDh]8m2
+!s100 i97N79c_m@]=7LbB>^@kT3
+R6
+32
+R7
+!i10b 1
+R8
+Z19 !s90 -reportprogress|300|-work|work|-2002|-explicit|-stats=none|A:/OneDrive/TU/2022WS/LU_Advanced_Digital_Design/Assignments/Assignment1/template/src/nosync_tb.vhd|
+Z20 !s107 A:/OneDrive/TU/2022WS/LU_Advanced_Digital_Design/Assignments/Assignment1/template/src/nosync_tb.vhd|
+!i113 1
+R11
+R12
+Atb
+R1
+R2
+DEx4 work 6 tb_top 0 22 `n?RfLHlKB@7iUABDh]8m2
+l37
+L7
+VaL=E8KcSV^1kMUo8:J4V^1
+!s100 0W?z]PE]0a^FJDPQ4nWD`0
+R6
+32
+R7
+!i10b 1
+R8
+R19
+R20
+!i113 1
+R11
+R12
+Etop
+R0
+R1
+R2
+R3
+R4
+R5
+l0
+L4
+VHIN2[N@KTXD8[X>0]QjzH2
+!s100 b^LKJ4jFQ86j<C]zUZ6Oa1
+R6
+32
+R7
+!i10b 1
+R8
+R9
+R10
+!i113 1
+R11
+R12
+Atop_arch
+R13
+R14
+R1
+R2
+Z21 DEx4 work 3 top 0 22 HIN2[N@KTXD8[X>0]QjzH2
+l125
+L121
+V34f;LRPB>Jc@HQfkLHf6]2
+!s100 jH?:@dbbXof_GWTEnJeEO0
+R6
+32
+R7
+!i10b 1
+R8
+R9
+R10
+!i113 1
+R11
+R12

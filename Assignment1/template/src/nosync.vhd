@@ -23,7 +23,8 @@ entity src is
     clk     : in  std_logic;
     reset_n : in  std_logic;
     data    : out std_logic_vector(11 downto 0);
-    req     : out std_logic
+    req     : out std_logic;
+    ack     : in  std_logic
     );
 end entity;
 
@@ -36,7 +37,8 @@ entity dst is
     reset_n  : in  std_logic;
     data     : in  std_logic_vector(11 downto 0);
     req      : in  std_logic;
-    data_out : out std_logic_vector(11 downto 0)
+    data_out : out std_logic_vector(11 downto 0);
+    ack      : out std_logic
     );
 end entity;
 
@@ -51,6 +53,7 @@ architecture src_arch of src is
   signal data_cnt            : unsigned(3 downto 0);
   signal reqreg              : std_logic;
   signal reset_sync          : std_logic_vector(1 downto 0);
+  signal oldack              : std_logic;
 begin
   rst : process(clk, reset_n)
   begin
@@ -61,16 +64,20 @@ begin
     end if;
   end process rst;
 
-  sync : process(clk, reset_sync)
+  sync : process(clk, reset_sync, ack)
   begin
     if reset_sync(0) = '0' then
       data_tgl <= "10101010";
       data_cnt <= to_unsigned(0, data_cnt'length);
       reqreg   <= '0';
+		oldack   <= '0';
     elsif rising_edge(clk) then
-      data_tgl <= not data_tgl;
-      data_cnt <= data_cnt + 1;
-      reqreg   <= not reqreg;
+      oldack <= ack;
+      if oldack /= ack then
+        data_tgl <= not data_tgl;
+        data_cnt <= data_cnt + 1;
+        reqreg   <= not reqreg;
+      end if;
     end if;
   end process sync;
 
@@ -82,6 +89,7 @@ architecture dst_arch of dst is
   signal reset_sync : std_logic_vector(1 downto 0);
   signal datareg    : std_logic_vector(data'range);
   signal oldreq     : std_logic;
+  signal ackreg     : std_logic;
 begin
   rst : process(clk, reset_n)
   begin
@@ -96,28 +104,33 @@ begin
   begin
     if reset_sync(0) = '0' then
       datareg <= (others => '0');
-      oldreq   <= req;
+      oldreq   <= '0';
+      ackreg  <= '0';
     elsif rising_edge(clk) then
       oldreq <= req;
       if oldreq /= req then
         datareg <= data;
+        ackreg <= not ackreg;
       end if;
     end if;
   end process reg;
 
   data_out <= datareg;
+  ack <= ackreg;
 end architecture;
 
 architecture top_arch of top is
   signal s_data : std_logic_vector(11 downto 0);
   signal s_req  : std_logic;
+  signal s_ack  : std_logic;
 begin
   src_inst : entity work.src
     port map (
       clk     => clk_src,
       reset_n => reset_n,
       data    => s_data,
-      req     => s_req
+      req     => s_req,
+      ack     => s_ack
       );
 
   dst_inst : entity work.dst
@@ -126,12 +139,13 @@ begin
       reset_n  => reset_n,
       data     => s_data,
       req      => s_req,
-      data_out => data_dst
+      data_out => data_dst,
+      ack      => s_ack
       );
 
   clk_src_out <= (others => clk_src);
   clk_dst_out <= (others => clk_dst);
   data_src    <= s_data;
   req         <= s_req;
-  ack         <= '-';
+  ack         <= s_ack;
 end architecture;

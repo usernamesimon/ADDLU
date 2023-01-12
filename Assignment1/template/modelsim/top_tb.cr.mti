@@ -1,0 +1,9 @@
+A:/OneDrive/TU/2022WS/LU_Advanced_Digital_Design/Assignments/Assignment1/template/src/nosync_tb.vhd {1 {vcom -work work -2002 -explicit -stats=none A:/OneDrive/TU/2022WS/LU_Advanced_Digital_Design/Assignments/Assignment1/template/src/nosync_tb.vhd
+Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  5 2016
+-- Loading package STANDARD
+-- Loading package TEXTIO
+-- Loading package std_logic_1164
+-- Compiling entity tb_top
+-- Compiling architecture tb of tb_top
+
+} {} {}}

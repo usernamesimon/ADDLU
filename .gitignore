@@ -54,6 +54,7 @@ rking with Altera Quartus II (Q2) and do proper versioning is not that easy
 *~
 *example*
 *sopc_*
+*.sld
 # *.sdc # I want those timing files
 
 # ignore Quartus II generated folders
@@ -65,4 +66,4 @@ rking with Altera Quartus II (Q2) and do proper versioning is not that easy
 */*_sim/
 incremental_db/
 db/
-_output_files/
+*/output_files/
