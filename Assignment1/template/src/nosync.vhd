@@ -123,6 +123,40 @@ begin
   req  <= reqreg;
 end architecture;
 
+
+
+architecture nosync of dst is
+  signal reset_sync : std_logic_vector(1 downto 0);
+  signal datareg    : std_logic_vector(data'range);
+  signal oldreq     : std_logic;
+begin
+  rst : process(clk, reset_n)
+  begin
+    if reset_n = '0' then
+      reset_sync <= (others => '0');
+    elsif rising_edge(clk) then
+      reset_sync <= '1' & reset_sync(1);
+    end if;
+  end process rst;
+
+  reg : process(clk, reset_sync, req)
+  begin
+    if reset_sync(0) = '0' then
+      datareg <= (others => '0');
+      oldreq   <= '0';
+		datareg  <=  (others => '0');
+    elsif rising_edge(clk) then
+      oldreq <= req;
+      if oldreq /= req then
+        datareg <= data;
+      end if;
+    end if;
+  end process reg;
+
+  data_out <= datareg;
+end architecture;
+
+
 architecture flowcontrol of dst is
   signal reset_sync : std_logic_vector(1 downto 0);
   signal datareg    : std_logic_vector(data'range);
@@ -157,10 +191,13 @@ begin
   ack <= ackreg;
 end architecture;
 
-architecture nosync of dst is
+
+architecture sync of dst is
   signal reset_sync : std_logic_vector(1 downto 0);
   signal datareg    : std_logic_vector(data'range);
   signal oldreq     : std_logic;
+  signal ackreg     : std_logic;
+  signal syncreg1   : std_logic_vector(data'range);
 begin
   rst : process(clk, reset_n)
   begin
@@ -175,17 +212,21 @@ begin
   begin
     if reset_sync(0) = '0' then
       datareg <= (others => '0');
+		syncreg1 <= (others => '0');
       oldreq   <= '0';
-		datareg  <=  (others => '0');
+      ackreg  <= '0';
     elsif rising_edge(clk) then
       oldreq <= req;
       if oldreq /= req then
-        datareg <= data;
+	     syncreg1 <= data;
+        datareg <= syncreg1;
+        ackreg <= not ackreg;
       end if;
     end if;
   end process reg;
 
   data_out <= datareg;
+  ack <= ackreg;
 end architecture;
 
 architecture top_arch of top is
@@ -193,7 +234,7 @@ architecture top_arch of top is
   signal s_req  : std_logic;
   signal s_ack  : std_logic;
 begin
-  src_inst : entity work.src(nosync)
+  src_inst : entity work.src(flowcontrol)
     port map (
       clk     => clk_src,
       reset_n => reset_n,
@@ -202,7 +243,7 @@ begin
       ack     => s_ack
       );
 
-  dst_inst : entity work.dst(nosync)
+  dst_inst : entity work.dst(sync)
     port map (
       clk      => clk_dst,
       reset_n  => reset_n,
