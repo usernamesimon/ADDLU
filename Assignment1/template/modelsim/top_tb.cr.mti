@@ -6,4 +6,12 @@ Model Technology ModelSim - Intel FPGA Edition vcom 10.5b Compiler 2016.10 Oct  
 -- Compiling entity tb_top
 -- Compiling architecture tb of tb_top
 
+} {} {}} /homes/s11776870/Documents/ADDLU/Assignment1/template/src/nosync_tb.vhd {1 {vcom -work work -2002 -explicit -vopt -stats=none /homes/s11776870/Documents/ADDLU/Assignment1/template/src/nosync_tb.vhd
+QuestaSim vcom 10.6c_1 Compiler 2017.09 Sep 15 2017
+-- Loading package STANDARD
+-- Loading package TEXTIO
+-- Loading package std_logic_1164
+-- Compiling entity tb_top
+-- Compiling architecture tb of tb_top
+
 } {} {}}

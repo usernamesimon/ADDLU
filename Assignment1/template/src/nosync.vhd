@@ -91,7 +91,10 @@ architecture flowcontrol of src is
   signal data_cnt            : unsigned(3 downto 0);
   signal reqreg              : std_logic;
   signal reset_sync          : std_logic_vector(1 downto 0);
-  signal oldack              : std_logic;
+  signal acksync0				  : std_logic;
+  signal acksync1            : std_logic;
+  signal acksync2            : std_logic;
+  signal deadlock				  : std_logic;
 begin
   rst : process(clk, reset_n)
   begin
@@ -107,14 +110,22 @@ begin
     if reset_sync(0) = '0' then
       data_tgl <= "10101010";
       data_cnt <= to_unsigned(0, data_cnt'length);
-      reqreg   <= '0';
-		oldack   <= '0';
+		acksync0 <= '1';
+		acksync1 <= '0';
+		acksync2 <= '1';
+		reqreg   <= '1';
+		deadlock <= '0';
     elsif rising_edge(clk) then
-      oldack <= ack;
-      if oldack /= ack then
+      acksync0 <= ack;
+		acksync1 <= acksync0;
+		acksync2 <= acksync1;
+      if acksync0 /= ack or deadlock = '1' then
         data_tgl <= not data_tgl;
         data_cnt <= data_cnt + 1;
         reqreg   <= not reqreg;
+		  deadlock <= '0';
+		else
+		  deadlock <= '1';
       end if;
     end if;
   end process sync;
@@ -144,7 +155,6 @@ begin
     if reset_sync(0) = '0' then
       datareg <= (others => '0');
       oldreq   <= '0';
-		datareg  <=  (others => '0');
     elsif rising_edge(clk) then
       oldreq <= req;
       if oldreq /= req then
@@ -155,12 +165,13 @@ begin
 
   data_out <= datareg;
 end architecture;
-
 
 architecture flowcontrol of dst is
   signal reset_sync : std_logic_vector(1 downto 0);
   signal datareg    : std_logic_vector(data'range);
-  signal oldreq     : std_logic;
+  signal reqsync0     : std_logic;
+  signal reqsync1     : std_logic;
+  signal reqsync2     : std_logic;
   signal ackreg     : std_logic;
 begin
   rst : process(clk, reset_n)
@@ -176,50 +187,16 @@ begin
   begin
     if reset_sync(0) = '0' then
       datareg <= (others => '0');
-      oldreq   <= '0';
+		reqsync0 <= '0';
+		reqsync1 <= '1';
+		reqsync2 <= '0';
       ackreg  <= '0';
     elsif rising_edge(clk) then
-      oldreq <= req;
-      if oldreq /= req then
+      reqsync0 <= req;
+		reqsync1 <= reqsync0;
+		reqsync2 <= reqsync1;
+      if reqsync0 /= req then
         datareg <= data;
-        ackreg <= not ackreg;
-      end if;
-    end if;
-  end process reg;
-
-  data_out <= datareg;
-  ack <= ackreg;
-end architecture;
-
-
-architecture sync of dst is
-  signal reset_sync : std_logic_vector(1 downto 0);
-  signal datareg    : std_logic_vector(data'range);
-  signal oldreq     : std_logic;
-  signal ackreg     : std_logic;
-  signal syncreg1   : std_logic_vector(data'range);
-begin
-  rst : process(clk, reset_n)
-  begin
-    if reset_n = '0' then
-      reset_sync <= (others => '0');
-    elsif rising_edge(clk) then
-      reset_sync <= '1' & reset_sync(1);
-    end if;
-  end process rst;
-
-  reg : process(clk, reset_sync, req)
-  begin
-    if reset_sync(0) = '0' then
-      datareg <= (others => '0');
-		syncreg1 <= (others => '0');
-      oldreq   <= '0';
-      ackreg  <= '0';
-    elsif rising_edge(clk) then
-      oldreq <= req;
-      if oldreq /= req then
-	     syncreg1 <= data;
-        datareg <= syncreg1;
         ackreg <= not ackreg;
       end if;
     end if;
@@ -243,7 +220,7 @@ begin
       ack     => s_ack
       );
 
-  dst_inst : entity work.dst(sync)
+  dst_inst : entity work.dst(flowcontrol)
     port map (
       clk      => clk_dst,
       reset_n  => reset_n,
