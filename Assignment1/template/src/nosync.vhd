@@ -92,8 +92,6 @@ architecture flowcontrol of src is
   signal reqreg              : std_logic;
   signal reset_sync          : std_logic_vector(1 downto 0);
   signal acksync0				  : std_logic;
-  signal acksync1            : std_logic;
-  signal acksync2            : std_logic;
   signal deadlock				  : std_logic;
 begin
   rst : process(clk, reset_n)
@@ -111,16 +109,69 @@ begin
       data_tgl <= "10101010";
       data_cnt <= to_unsigned(0, data_cnt'length);
 		acksync0 <= '1';
-		acksync1 <= '0';
-		acksync2 <= '1';
 		reqreg   <= '1';
 		deadlock <= '0';
     elsif rising_edge(clk) then
       acksync0 <= ack;
-		acksync1 <= acksync0;
-		acksync2 <= acksync1;
       if acksync0 /= ack or deadlock = '1' then
-        data_tgl <= not data_tgl;
+			if reqreg = '1' then
+				data_tgl <= "10101010";
+			else
+				data_tgl <= "01010101";
+			end if;
+        data_cnt <= data_cnt + 1;
+        reqreg   <= not reqreg;
+		  deadlock <= '0';
+		else
+		  deadlock <= '1';
+      end if;
+    end if;
+  end process sync;
+
+  data <= data_tgl & std_logic_vector(data_cnt);
+  req  <= reqreg;
+end architecture;
+
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+architecture sync of src is
+  signal data_tgl            : std_logic_vector(7 downto 0);
+  attribute keep             : boolean;
+  attribute keep of data_tgl : signal is true;
+  signal data_cnt            : unsigned(3 downto 0);
+  signal reqreg              : std_logic;
+  signal reset_sync          : std_logic_vector(1 downto 0);
+  signal acksync				  : unsigned(3 downto 0);
+  signal deadlock				  : std_logic;
+begin
+  rst : process(clk, reset_n)
+  begin
+    if reset_n = '0' then
+      reset_sync <= (others => '0');
+    elsif rising_edge(clk) then
+      reset_sync <= '1' & reset_sync(1);
+    end if;
+  end process rst;
+
+  sync : process(clk, reset_sync, ack)
+  begin
+    if reset_sync(0) = '0' then
+      data_tgl <= "10101010";
+      data_cnt <= to_unsigned(0, data_cnt'length);
+		acksync <= "1010";
+		reqreg   <= '1';
+		deadlock <= '0';
+    elsif rising_edge(clk) then
+      acksync <= shift_left(acksync, 1);
+		acksync(0) <= ack;
+      if acksync(3) /= acksync(2) or deadlock = '1' then
+			if reqreg = '1' then
+				data_tgl <= "10101010";
+			else
+				data_tgl <= "01010101";
+			end if;
         data_cnt <= data_cnt + 1;
         reqreg   <= not reqreg;
 		  deadlock <= '0';
@@ -206,12 +257,51 @@ begin
   ack <= ackreg;
 end architecture;
 
+
+use ieee.numeric_std.all;
+
+architecture sync of dst is
+  signal reset_sync : std_logic_vector(1 downto 0);
+  signal datareg    : unsigned(47 downto 0);
+  signal reqsync    : unsigned(3 downto 0);
+  signal ackreg     : std_logic;
+begin
+  rst : process(clk, reset_n)
+  begin
+    if reset_n = '0' then
+      reset_sync <= (others => '0');
+    elsif rising_edge(clk) then
+      reset_sync <= '1' & reset_sync(1);
+    end if;
+  end process rst;
+
+  reg : process(clk, reset_sync, req)
+  begin
+    if reset_sync(0) = '0' then
+      datareg <= to_unsigned(0, datareg'length);
+		reqsync <= "1010";
+      ackreg  <= '0';
+    elsif rising_edge(clk) then
+      reqsync <= shift_left(reqsync, 1);
+		reqsync(0) <= req;
+      if reqsync(3) /= reqsync(2) then
+        datareg <= shift_left(datareg, 12);
+		  datareg(data'range) <= unsigned(data);
+        ackreg <= not ackreg;
+      end if;
+    end if;
+  end process reg;
+
+  data_out <= std_logic_vector(datareg(47 downto 36));
+  ack <= ackreg;
+end architecture;
+
 architecture top_arch of top is
   signal s_data : std_logic_vector(11 downto 0);
   signal s_req  : std_logic;
   signal s_ack  : std_logic;
 begin
-  src_inst : entity work.src(flowcontrol)
+  src_inst : entity work.src(sync)
     port map (
       clk     => clk_src,
       reset_n => reset_n,
@@ -220,7 +310,7 @@ begin
       ack     => s_ack
       );
 
-  dst_inst : entity work.dst(flowcontrol)
+  dst_inst : entity work.dst(sync)
     port map (
       clk      => clk_dst,
       reset_n  => reset_n,
