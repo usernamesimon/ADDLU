@@ -92,7 +92,7 @@ architecture flowcontrol of src is
   signal reqreg              : std_logic;
   signal reset_sync          : std_logic_vector(1 downto 0);
   signal acksync0				  : std_logic;
-  signal deadlock				  : std_logic;
+  --signal deadlock				  : std_logic;
 begin
   rst : process(clk, reset_n)
   begin
@@ -108,22 +108,20 @@ begin
     if reset_sync(0) = '0' then
       data_tgl <= "10101010";
       data_cnt <= to_unsigned(0, data_cnt'length);
-		acksync0 <= '1';
-		reqreg   <= '1';
-		deadlock <= '0';
+		acksync0 <= '1'; --need a change on reset, ack is 0 on dst after reset
+		reqreg   <= '0';
+		--deadlock <= '0';
     elsif rising_edge(clk) then
       acksync0 <= ack;
-      if acksync0 /= ack or deadlock = '1' then
-			if reqreg = '1' then
-				data_tgl <= "10101010";
-			else
-				data_tgl <= "01010101";
-			end if;
+      if acksync0 /= ack then
+		  data_tgl <= not data_tgl;
         data_cnt <= data_cnt + 1;
         reqreg   <= not reqreg;
-		  deadlock <= '0';
+		  --deadlock <= '0';
+		--elsif deadlock = '1' then
+			--reqreg <= not reqreg;
 		else
-		  deadlock <= '1';
+		  --deadlock <= '1';
       end if;
     end if;
   end process sync;
@@ -143,8 +141,8 @@ architecture sync of src is
   signal data_cnt            : unsigned(3 downto 0);
   signal reqreg              : std_logic;
   signal reset_sync          : std_logic_vector(1 downto 0);
-  signal acksync				  : unsigned(3 downto 0);
-  signal deadlock				  : std_logic;
+  signal acksync				  : unsigned(2 downto 0);
+  --signal deadlock				  : std_logic;
 begin
   rst : process(clk, reset_n)
   begin
@@ -160,13 +158,13 @@ begin
     if reset_sync(0) = '0' then
       data_tgl <= "10101010";
       data_cnt <= to_unsigned(0, data_cnt'length);
-		acksync <= "1010";
+		acksync <= (others => '0');
 		reqreg   <= '1';
-		deadlock <= '0';
+		--deadlock <= '0';
     elsif rising_edge(clk) then
       acksync <= shift_left(acksync, 1);
 		acksync(0) <= ack;
-      if acksync(3) /= acksync(2) or deadlock = '1' then
+      if acksync(1) /= acksync(2) then
 			if reqreg = '1' then
 				data_tgl <= "10101010";
 			else
@@ -174,9 +172,11 @@ begin
 			end if;
         data_cnt <= data_cnt + 1;
         reqreg   <= not reqreg;
-		  deadlock <= '0';
-		else
-		  deadlock <= '1';
+		  --deadlock <= '0';
+		--elsif deadlock = '1' then
+			--reqreg <= not reqreg;
+		--else
+		  --deadlock <= '1';
       end if;
     end if;
   end process sync;
@@ -221,8 +221,6 @@ architecture flowcontrol of dst is
   signal reset_sync : std_logic_vector(1 downto 0);
   signal datareg    : std_logic_vector(data'range);
   signal reqsync0     : std_logic;
-  signal reqsync1     : std_logic;
-  signal reqsync2     : std_logic;
   signal ackreg     : std_logic;
 begin
   rst : process(clk, reset_n)
@@ -239,13 +237,9 @@ begin
     if reset_sync(0) = '0' then
       datareg <= (others => '0');
 		reqsync0 <= '0';
-		reqsync1 <= '1';
-		reqsync2 <= '0';
       ackreg  <= '0';
     elsif rising_edge(clk) then
       reqsync0 <= req;
-		reqsync1 <= reqsync0;
-		reqsync2 <= reqsync1;
       if reqsync0 /= req then
         datareg <= data;
         ackreg <= not ackreg;
@@ -262,8 +256,8 @@ use ieee.numeric_std.all;
 
 architecture sync of dst is
   signal reset_sync : std_logic_vector(1 downto 0);
-  signal datareg    : unsigned(47 downto 0);
-  signal reqsync    : unsigned(3 downto 0);
+  signal datareg    : std_logic_vector(11 downto 0);
+  signal reqsync    : unsigned(2 downto 0);
   signal ackreg     : std_logic;
 begin
   rst : process(clk, reset_n)
@@ -278,21 +272,20 @@ begin
   reg : process(clk, reset_sync, req)
   begin
     if reset_sync(0) = '0' then
-      datareg <= to_unsigned(0, datareg'length);
-		reqsync <= "1010";
-      ackreg  <= '0';
+      datareg <= (others => '0');
+		reqsync <= (others => '0');
+      ackreg  <= '1';
     elsif rising_edge(clk) then
       reqsync <= shift_left(reqsync, 1);
 		reqsync(0) <= req;
-      if reqsync(3) /= reqsync(2) then
-        datareg <= shift_left(datareg, 12);
-		  datareg(data'range) <= unsigned(data);
+      if reqsync(1) /= reqsync(2) then
+        datareg <= data;
         ackreg <= not ackreg;
       end if;
     end if;
   end process reg;
 
-  data_out <= std_logic_vector(datareg(47 downto 36));
+  data_out <= datareg;
   ack <= ackreg;
 end architecture;
 
@@ -300,29 +293,87 @@ architecture top_arch of top is
   signal s_data : std_logic_vector(11 downto 0);
   signal s_req  : std_logic;
   signal s_ack  : std_logic;
+  signal s_ack_sync : std_logic;
+  signal s_req_sync : std_logic;
 begin
-  src_inst : entity work.src(sync)
+  src_inst : entity work.src(flowcontrol)
     port map (
       clk     => clk_src,
       reset_n => reset_n,
       data    => s_data,
       req     => s_req,
-      ack     => s_ack
+      ack     => s_ack_sync
       );
 
-  dst_inst : entity work.dst(sync)
+  dst_inst : entity work.dst(flowcontrol)
     port map (
       clk      => clk_dst,
       reset_n  => reset_n,
       data     => s_data,
-      req      => s_req,
+      req      => s_req_sync,
       data_out => data_dst,
       ack      => s_ack
       );
-
+		
+	ack_sync : entity work.bit_synchronizer
+		generic map (STAGES => 1, RESET_ACTIVE_LEVEL => '0')
+		port map (
+			Clock => clk_src,
+			Reset => reset_n,
+			Bit_in => s_ack,
+			Sync => s_ack_sync
+		);
+	
+	req_sync : entity work.bit_synchronizer
+      generic map (STAGES => 1, RESET_ACTIVE_LEVEL => '0')
+		port map (
+			Clock => clk_dst,
+			Reset => reset_n,
+			Bit_in => s_req,
+			Sync => s_req_sync
+		);
   clk_src_out <= (others => clk_src);
   clk_dst_out <= (others => clk_dst);
   data_src    <= s_data;
   req         <= s_req;
   ack         <= s_ack;
+end architecture;
+
+library ieee;
+use ieee.std_logic_1164.all;
+
+--## A basic synchronizer with a configurable number of stages
+entity bit_synchronizer is
+  generic (
+    STAGES : natural := 2; --# Number of flip-flops in the synchronizer
+    RESET_ACTIVE_LEVEL : std_ulogic := '1' --# Asynch. reset control level
+  );
+  port (
+    Clock  : in std_ulogic; --# System clock
+    Reset  : in std_ulogic; --# Asynchronous reset
+
+    Bit_in : in std_ulogic; --# Unsynchronized signal
+    Sync   : out std_ulogic --# Synchronized to Clock's domain
+  );
+end entity;
+
+architecture rtl of bit_synchronizer is
+  signal sr : std_ulogic_vector(1 to STAGES);
+  
+  -- Xilinx synth attributes:
+  attribute SHREG_EXTRACT : string;
+  attribute ASYNC_REG     : string;
+  attribute RLOC          : string;
+  
+begin
+  reg: process(Clock, Reset) is
+  begin
+    if Reset = RESET_ACTIVE_LEVEL then
+      sr <= (others => '0');
+    elsif rising_edge(Clock) then
+      sr <= to_X01(Bit_in) & sr(1 to sr'right-1);
+    end if;
+  end process;
+
+  Sync <= sr(sr'right);
 end architecture;
